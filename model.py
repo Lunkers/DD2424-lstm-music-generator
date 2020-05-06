@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
 
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -7,17 +8,17 @@ class LSTM(nn.Module):
 
         self.hidden_size = hidden_size
         #input gate weights
-        self.Wi = nn.Linear(hidden_size, hidden_size, bias=True)
-        self.Ui = nn.Linear(input_size, hidden_size, bias=True)
+        self.Wi = nn.Linear(hidden_size, hidden_size)
+        self.Ui = nn.Linear(input_size, hidden_size)
         #Forget gate weights
-        self.Wf = nn.Linear(hidden_size, hidden_size,bias=True)
-        self.Uf = nn.Linear(input_size, hidden_size, bias=True)
+        self.Wf = nn.Linear(hidden_size, hidden_size)
+        self.Uf = nn.Linear(input_size, hidden_size)
         #output gate weights
-        self.Wo = nn.Linear(hidden_size, hidden_size, bias=True)
-        self.Uo = nn.Linear(input_size, hidden_size, bias=True)
+        self.Wo = nn.Linear(hidden_size, hidden_size)
+        self.Uo = nn.Linear(input_size, hidden_size)
         #cell weights
-        self.Wc = nn.Linear(hidden_size,hidden_size, bias=True)
-        self.Uc = nn.Linear(input_size, hidden_size, bias=True)
+        self.Wc = nn.Linear(hidden_size,hidden_size)
+        self.Uc = nn.Linear(input_size, hidden_size)
 
         #Fully connected layer for output
         self.V = nn.Linear(hidden_size, output_size, bias=True)
@@ -33,7 +34,7 @@ class LSTM(nn.Module):
         o = F.sigmoid(self.Wo(hidden) + self.Uo(input_data))
         c_tilde = F.tanh(self.Wc(hidden) + self.Uc(input_data))
         c = f * memory + i * c_tilde
-        h = o * tanh(c)
+        h = o * F.tanh(c)
 
         output = F.softmax(self.V(h))
         return output, h, c

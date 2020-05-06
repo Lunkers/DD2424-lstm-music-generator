@@ -6,14 +6,19 @@ nextString = "<NEXT>"
 endString = "<END>"
 
 
-def load_data():
+def format_midi_data(split):
+    """
+    Load data from MIDI files, and dump it to a JSON file.
+    Args:
+        Split: which type of data file to load (i.e training or test)
+    """
     file_arr = []
     dir_prefix = './maestro-v2.0.0/'
     notes = []
     with open('./maestro-v2.0.0/maestro-v2.0.0.json') as f:
         json_data = json.load(f)
         for row in json_data:
-            if row['split'] == 'train':
+            if row['split'] == split:
                 file_arr.append(row['midi_filename'])
         
    
@@ -44,13 +49,20 @@ def load_data():
         json.dump(data, notefile)
 
 def read_data(file_path):
-    data = JSON.load(file_path)
-    data = data["notes"]
-    alphabet = set(data)
-    sign_to_int = dict([(y,x) for x,y in enumerate(sorted(alphabet))])
-    int_to_sign = dict([(x,y) for x,y in enumerate(sorted(alphabet))])
+    with open(file_path) as f:
+        data = json.load(f)
+        data = data["notes"]
+        alphabet = set(data)
+        sign_to_int = dict([(y,x) for x,y in enumerate(sorted(alphabet))])
+        int_to_sign = dict([(x,y) for x,y in enumerate(sorted(alphabet))])
 
     return sign_to_int, int_to_sign
+
+
+def loade_data(file_path):
+    with open(file_path) as f:
+        json_data = json.load(f)
+    return json_data
 
 
 def one_hot_encoding(sign_int: int, alphabet_size: int):
@@ -83,16 +95,38 @@ def decode_output(prob_vec:torch.tensor, int_to_sign: dict):
     _ , index = prob_vec.max(1)
     return int_to_sign[index[0].item()]
     
-def build_midi():
-    pass
+
+
+def create_midi(notes):
+    s = stream.Stream()
+    c = []
+    for i, n in enumerate(notes):
+        if (n == nextString or n == endString):
+            if (c != []):
+                s.append(chord.Chord(c))
+                c = []
+            continue 
+        if (notes[i+1] == nextString or notes[i+1] == endString):
+            s.append(note.Note(n))
+        else:
+            c.append(note.Note(n))
+
+    mf = midi.translate.streamToMidiFile(s)
+    mf.open('test.mid', 'wb')
+    mf.write()
+    mf.close()
 
 
 
+if __name__ == "__main__":
+    #load_data()
+    sign2int, int2sign = read_data('./notes.json')
+    with open("sign2int.json", "w") as f:
+        json.dump(sign2int, f)
 
-load_data()
-sign2int, int2sign = read_data('./notes.json')
-with open("sign2int.json") as f:
-    json.dump(sign2int, f)
+    with open("int2sign.json", "w") as f:
+        json.dump(int2sign, f)
 
-with open("int2sign.json") as f:
-    json.dump(int2sign, f)
+
+    #TODO: do glob for file reading
+    print("done!")
