@@ -10,11 +10,13 @@ import random
 
 
 def main():
+    global device
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     notes = loade_data('./notes.json')['notes']
-    validation = loade_data('./notes.json')['notes']
+    validation = loade_data('./validation.json')['notes']
+    test = loade_data('./test.json')['notes']
     int_to_sign =  loade_data('./int2sign.json')
     sign_to_int = loade_data('./sign2int.json')
-
     seq_length = 25
 
     
@@ -27,10 +29,13 @@ def main():
     network = LSTM(hidden_size = 64, input_size = 90, output_size = 90)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(network.parameters(), learning_rate)
-
+    # move network to GPU
+    network.to(device)
+    print(device)
     network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, 25, sign_to_int)
     plt.figure()
     plt.plot(losses)
+    plt.show()
     acc = evaluateAccuracy(validation, network, 25, sign_to_int)
     print(acc)
 
@@ -40,7 +45,6 @@ def main():
 def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, n_epochs: int, seq_length:int, sign_to_int):
     iters_per_epoch = len(data) // seq_length
     iters = iters_per_epoch * n_epochs
-    iters = 1000
     total_loss = 0
     all_loss = []
     print( "Training for %d iterations" % iters)
@@ -48,6 +52,9 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
         if iteration % 1000 == 0:
             print(iteration)
         input_seq, follow_seq = randomTrainingExample(data, seq_length, sign_to_int)
+        #move data to correct device
+        input_seq.to(device)
+        follow_seq.to(device)
         output, loss = train(network, criterion, input_seq, follow_seq, optimizer)
         total_loss += loss
         all_loss.append(loss)
@@ -58,21 +65,22 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     network.eval()
     hidden = network.initHidden()
     memory = network.initMemory()
-
+    print(len(data))
     right = 0
     total = 0
 
     for i in range(0, len(data), seq_length):
         in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
         out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
-        print(in_seq.size())
-        print(out_seq.size())
+        in_seq.to(device)
+        out_seq.to(device)
         out_seq.unsqueeze_(-1)
-        output, hidden, memory = network(in_seq[i], hidden, memory)
-        _, guess = output.max(1)
-        if guess == out_seq[i]:
-            right = right + 1
-        total = total + 1
+        for j in range(out_seq.size()[0]):
+            output, hidden, memory = network(in_seq[j], hidden, memory)
+            _, guess = output.max(1)
+            if guess == out_seq[j]:
+                right = right + 1
+            total = total + 1
 
     return right / total
         
@@ -149,7 +157,7 @@ def randomTrainingExample(data, seq_length, sign_to_int):
     return  convert_to_one_hot_matrix(data[i:i+seq_length], sign_to_int), target_tensor(data[i+1: i + seq_length +1], sign_to_int)
 
 def save_network(network: LSTM, path: str):
-    torch.save(Network.state_dict(), path)
+    torch.save(network.state_dict(), path)
 
 def load_network(network: LSTM, path: str):
     network.load_state_dict(torch.load(path))
