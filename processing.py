@@ -1,4 +1,4 @@
-from music21 import converter, instrument, note, chord
+from music21 import converter, instrument, note, chord, stream, midi
 import json
 import torch
 
@@ -45,7 +45,7 @@ def format_midi_data(split):
 
     #spara notes som JSON-fil
     #JSON.dumps(s)
-    with open("notes.json", 'a') as notefile:
+    with open("{0}.json".format(split), 'a') as notefile:
         json.dump(data, notefile)
 
 def read_data(file_path):
@@ -119,14 +119,15 @@ def create_midi(notes):
 
 
 if __name__ == "__main__":
-    #load_data()
+    #format_midi_data("test")
+    """
     sign2int, int2sign = read_data('./notes.json')
     with open("sign2int.json", "w") as f:
         json.dump(sign2int, f)
 
     with open("int2sign.json", "w") as f:
         json.dump(int2sign, f)
-
+    """
 
     #TODO: do glob for file reading
     print("done!")

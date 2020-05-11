@@ -19,10 +19,7 @@ class LSTM(nn.Module):
         #cell weights
         self.Wc = nn.Linear(hidden_size,hidden_size)
         self.Uc = nn.Linear(input_size, hidden_size)
-
-        #Fully connected layer for output
         self.V = nn.Linear(hidden_size, output_size, bias=True)
-    
     def initHidden(self):
         return torch.zeros(1, self.hidden_size)
     def initMemory(self):
@@ -35,6 +32,23 @@ class LSTM(nn.Module):
         c_tilde = F.tanh(self.Wc(hidden) + self.Uc(input_data))
         c = f * memory + i * c_tilde
         h = o * F.tanh(c)
-
         output = F.softmax(self.V(h))
         return output, h, c
+
+class Network(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(Network, self).__init__()
+
+        self.LSTM = LSTM(input_size, hidden_size)
+        self.V = nn.Linear(hidden_size, output_size)
+    
+    def initHidden(self):
+        self.LSTM.initHidden()
+    def initMemory(self):
+        self.LSTM.initMemory()
+
+    def forward(self, input_data, hidden, memory):
+        hidden, memory = self.LSTM(input_data, hidden, memory)
+        output = nn.Softmax(self.V(hidden))
+
+        return output, hidden, memory
