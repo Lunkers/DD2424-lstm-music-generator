@@ -64,6 +64,8 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     network.eval()
     hidden = network.initHidden()
     memory = network.initMemory()
+    hidden.to(device)
+    memory.to(device)
     print(len(data))
     right = 0
     total = 0
@@ -89,6 +91,8 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
     follow_seq.unsqueeze_(-1)
     hidden = network.initHidden()
     memory = network.initMemory()
+    hidden.to(device)
+    memory.to(device)
     loss = 0
     
     
