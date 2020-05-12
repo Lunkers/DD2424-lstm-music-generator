@@ -31,7 +31,7 @@ def main():
     # move network to GPU
     network.to(device)
     print(device)
-    network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int)
+    network, _, losses = trainLoop(network, criterion, notes, optimizer, 2, seq_length, sign_to_int)
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
