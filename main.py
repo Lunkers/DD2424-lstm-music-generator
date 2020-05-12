@@ -52,8 +52,8 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
             print(iteration)
         input_seq, follow_seq = randomTrainingExample(data, seq_length, sign_to_int)
         #move data to correct device
-        input_seq.to(device)
-        follow_seq.to(device)
+        input_seq = input_seq.to(device)
+        follow_seq = follow_seq.to(device)
         output, loss = train(network, criterion, input_seq, follow_seq, optimizer)
         total_loss += loss
         all_loss.append(loss)
@@ -64,8 +64,8 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     network.eval()
     hidden = network.initHidden()
     memory = network.initMemory()
-    hidden.to(device)
-    memory.to(device)
+    hidden = hidden.to(device)
+    memory = memory.to(device)
     print(len(data))
     right = 0
     total = 0
@@ -73,8 +73,8 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     for i in range(0, len(data), seq_length):
         in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
         out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
-        in_seq.to(device)
-        out_seq.to(device)
+        in_seq = in_seq.to(device)
+        out_seq = out_seq.to(device)
         out_seq.unsqueeze_(-1)
         for j in range(out_seq.size()[0]):
             output, hidden, memory = network(in_seq[j], hidden, memory)
@@ -91,8 +91,8 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
     follow_seq.unsqueeze_(-1)
     hidden = network.initHidden()
     memory = network.initMemory()
-    hidden.to(device)
-    memory.to(device)
+    hidden = hidden.to(device)
+    memory = memory.to(device)
     loss = 0
     
     
