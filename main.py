@@ -31,11 +31,11 @@ def main():
     # move network to GPU
     network.to(device)
     print(device)
-    network, _, losses = trainLoop(network, criterion, notes[1:10000], optimizer, 2, seq_length, sign_to_int)
+    network, _, losses = trainLoop(network, criterion, notes, optimizer, 2, seq_length, sign_to_int)
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
-    acc = evaluateAccuracy(validation[1:10000], network, seq_length, sign_to_int)
+    acc = evaluateAccuracy(validation, network, seq_length, sign_to_int)
     print(acc)
 
     save_network(network, "net.pth")
