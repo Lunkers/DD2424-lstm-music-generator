@@ -22,8 +22,7 @@ def main():
     
     #refactor this, we only need a one-hot for the input
     #select a sequence or whatever here, use predefined for now (testing)
-    in_seq = convert_to_one_hot_matrix(notes[0:10], sign_to_int)
-    ground_truth = target_tensor(notes[1:11], sign_to_int)
+
     learning_rate = 0.001
 
     network = LSTM(hidden_size = 64, input_size = 90, output_size = 90)
@@ -32,11 +31,11 @@ def main():
     # move network to GPU
     network.to(device)
     print(device)
-    network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, 25, sign_to_int)
+    network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int)
     plt.figure()
     plt.plot(losses)
-    plt.show()
-    acc = evaluateAccuracy(validation, network, 25, sign_to_int)
+    plt.savefig('losses.png')
+    acc = evaluateAccuracy(validation, network, seq_length, sign_to_int)
     print(acc)
 
     save_network(network, "net.pth")
