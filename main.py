@@ -97,7 +97,11 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
     for i in range(input_seq.size()[0]):
         output, hidden, memory = network(input_seq[i], hidden, memory)
         l =  criterion(output, follow_seq[i])
-        loss += l
+        #TODO: smooth loss here
+        if i == 0:
+            loss +=l
+        else:
+            loss = 0.999 * loss + 0.001 * loss
     
         
     loss.backward()
