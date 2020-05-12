@@ -48,7 +48,7 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
     all_loss = []
     print( "Training for %d iterations" % iters)
     for iteration in range(1, iters + 1):
-        if iteration % 1000 == 0:
+        if iteration % 10000 == 0:
             print(iteration)
         input_seq, follow_seq = randomTrainingExample(data, seq_length, sign_to_int)
         #move data to correct device
