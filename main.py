@@ -27,7 +27,7 @@ def main():
 
     network = LSTM(hidden_size = 64, input_size = 90, output_size = 90)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(network.parameters(), learning_rate)
+    optimizer = optim.Adam(network.parameters(), learning_rate)
     # move network to GPU
     network.to(device)
     print(device)
@@ -101,10 +101,7 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
         output, hidden, memory = network(input_seq[i], hidden, memory)
         l =  criterion(output, follow_seq[i])
         #TODO: smooth loss here
-        if i == 0:
-            loss +=l
-        else:
-            loss = 0.999 * loss + 0.001 * loss
+        loss += l
     
         
     loss.backward()
