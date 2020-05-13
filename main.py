@@ -35,7 +35,7 @@ def main():
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
-    acc = evaluateAccuracy(validation, network, seq_length, sign_to_int)
+    acc = evaluateAccuracy(validation[0: len (validation) // 4], network, seq_length, sign_to_int)
     print(acc)
 
     save_network(network, "net.pth")
