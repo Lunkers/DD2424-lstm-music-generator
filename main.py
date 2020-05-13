@@ -35,7 +35,7 @@ def main():
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
-    acc = evaluateAccuracy(validation[0: len (validation) // 4], network, seq_length, sign_to_int)
+    acc = evaluateAccuracy(validation, network, seq_length, sign_to_int)
     print(acc)
 
     save_network(network, "net.pth")
@@ -70,7 +70,7 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     right = 0
     total = 0
 
-    for i in range(0, len(data), seq_length):
+    for i in range(0, len(data), seq_length * 4):
         in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
         out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
         in_seq = in_seq.to(device)
