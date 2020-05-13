@@ -29,10 +29,11 @@ def main():
     criterion = nn.CrossEntropyLoss()
     network.to(device)
     optimizer = optim.Adam(network.parameters(), learning_rate)
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.01, cycle_momentum=False)
     # move network to GPU
     
     print(device)
-    network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int)
+    network, _, losses = trainLoop(network, criterion, notes, scheduler, 1, seq_length, sign_to_int)
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
