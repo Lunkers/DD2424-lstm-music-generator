@@ -27,9 +27,10 @@ def main():
 
     network = LSTM(hidden_size = 64, input_size = 90, output_size = 90)
     criterion = nn.CrossEntropyLoss()
+    network.to(device)
     optimizer = optim.Adam(network.parameters(), learning_rate)
     # move network to GPU
-    network.to(device)
+    
     print(device)
     network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int)
     plt.figure()
