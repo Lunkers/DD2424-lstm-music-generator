@@ -29,24 +29,27 @@ def main():
     criterion = nn.CrossEntropyLoss()
     network.to(device)
     optimizer = optim.Adam(network.parameters(), learning_rate)
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.0001, max_lr=0.01, cycle_momentum=False)
     # move network to GPU
     
     print(device)
-    network, _, losses = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int)
+    network, _, losses, best_net = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int, scheduler)
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
-    acc = evaluateAccuracy(validation, network, seq_length, sign_to_int)
+    acc = evaluateAccuracy(validation, best_net, seq_length, sign_to_int)
     print(acc)
 
     save_network(network, "net.pth")
     
 
-def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, n_epochs: int, seq_length:int, sign_to_int):
+def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, n_epochs: int, seq_length:int, sign_to_int, scheduler):
     iters_per_epoch = len(data) // seq_length
     iters = iters_per_epoch * n_epochs
     total_loss = 0
     all_loss = []
+    min_loss = 10000
+    min_network = None
     print( "Training for %d iterations" % iters)
     for iteration in range(1, iters + 1):
         if iteration % 10000 == 0:
@@ -55,11 +58,13 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
         #move data to correct device
         input_seq = input_seq.to(device)
         follow_seq = follow_seq.to(device)
-        output, loss = train(network, criterion, input_seq, follow_seq, optimizer)
+        output, loss = train(network, criterion, input_seq, follow_seq, optimizer, scheduler)
+        if loss < min_loss:
+            min_network = network
         total_loss += loss
         all_loss.append(loss)
 
-    return network, total_loss, all_loss
+    return network, total_loss, all_loss, min_network
 
 def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     network.eval()
@@ -88,7 +93,7 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
         
 
 
-def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Optimizer):
+def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Optimizer, scheduler):
     follow_seq.unsqueeze_(-1)
     hidden = network.initHidden()
     memory = network.initMemory()
@@ -108,6 +113,7 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
     loss.backward()
 
     optimizer.step()
+    scheduler.step()
 
     return output, loss.item()
 
