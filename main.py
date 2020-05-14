@@ -37,10 +37,10 @@ def main():
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
-    acc = evaluateAccuracy(validation, best_net, seq_length, sign_to_int)
+    acc = evaluateAccuracy(test, best_net, seq_length, sign_to_int)
     print(acc)
 
-    save_network(network, "net.pth")
+    save_network(best_net, "net.pth")
     
 
 def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, n_epochs: int, seq_length:int, sign_to_int, scheduler):
@@ -50,6 +50,7 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
     all_loss = []
     min_loss = 10000
     min_network = None
+    smooth_loss = 0
     print( "Training for %d iterations" % iters)
     for iteration in range(1, iters + 1):
         if iteration % 10000 == 0:
@@ -59,6 +60,8 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
         input_seq = input_seq.to(device)
         follow_seq = follow_seq.to(device)
         output, loss = train(network, criterion, input_seq, follow_seq, optimizer, scheduler)
+        #do smooth loss
+        
         if loss < min_loss:
             min_network = network
         total_loss += loss
@@ -76,7 +79,7 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     right = 0
     total = 0
 
-    for i in range(0, len(data), seq_length * 4):
+    for i in range(0, len(data), seq_length):
         in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
         out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
         in_seq = in_seq.to(device)
@@ -115,7 +118,7 @@ def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Opti
     optimizer.step()
     scheduler.step()
 
-    return output, loss.item()
+    return output, loss.item() / input_seq.size()[0]
 
 def convert_to_one_hot_matrix(data, sign_to_int):
     """
