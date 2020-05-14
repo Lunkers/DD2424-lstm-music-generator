@@ -17,7 +17,7 @@ def main():
     test = loade_data('./test.json')['notes']
     int_to_sign =  loade_data('./int2sign.json')
     sign_to_int = loade_data('./sign2int.json')
-    seq_length = 25
+    seq_length = 100
 
     
     #refactor this, we only need a one-hot for the input
@@ -29,7 +29,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
     network.to(device)
     optimizer = optim.Adam(network.parameters(), learning_rate)
-    scheduler = optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.0001, max_lr=0.01, cycle_momentum=False)
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.0001, max_lr=0.001, cycle_momentum=False)
     # move network to GPU
     
     print(device)
