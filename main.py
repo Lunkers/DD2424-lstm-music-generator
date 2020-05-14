@@ -17,7 +17,7 @@ def main():
     test = loade_data('./test.json')['notes']
     int_to_sign =  loade_data('./int2sign.json')
     sign_to_int = loade_data('./sign2int.json')
-    seq_length = 50
+    seq_length = 200
 
     
     #refactor this, we only need a one-hot for the input
