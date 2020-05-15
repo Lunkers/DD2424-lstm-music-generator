@@ -37,10 +37,13 @@ def main():
     plt.figure()
     plt.plot(losses)
     plt.savefig('losses.png')
+    print('saving network....')
+    save_network(best_net, "net.pth")
+    print('evaluating on test data...')
     acc = evaluateAccuracy(test, best_net, seq_length, sign_to_int)
     print(acc)
 
-    save_network(best_net, "net.pth")
+    
     
 
 def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, n_epochs: int, seq_length:int, sign_to_int, scheduler):
