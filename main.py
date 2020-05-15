@@ -33,16 +33,16 @@ def main():
     # move network to GPU
     
     print(device)
-    network, _, losses, best_net = trainLoop(network, criterion, notes, optimizer, 3, seq_length, sign_to_int, scheduler)
-    plt.figure()
+    network, _, losses, best_net = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int, scheduler)
+    
     plt.plot(losses)
     plt.savefig('losses.png')
+    plt.close('all')
     print('saving network....')
     save_network(best_net, "net.pth")
     print('evaluating on test data...')
-    acc = evaluateAccuracy(test, best_net, seq_length, sign_to_int)
-    print(acc)
-
+    evaluateAccuracy(test, best_net, seq_length, sign_to_int)
+    print("eval done!")
     
     
 
@@ -73,7 +73,8 @@ def trainLoop(network: LSTM, criterion, data: list, optimizer: optim.Optimizer, 
     return network, total_loss, all_loss, min_network
 
 def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
-    network.eval()
+    #network.eval()
+   
     hidden = network.initHidden()
     memory = network.initMemory()
     hidden = hidden.to(device)
@@ -82,21 +83,28 @@ def evaluateAccuracy(data: list, network: LSTM, seq_length: int, sign_to_int):
     right = 0
     total = 0
 
-    for i in range(0, len(data), seq_length):
-        in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
-        out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
-        in_seq = in_seq.to(device)
-        out_seq = out_seq.to(device)
-        out_seq.unsqueeze_(-1)
-        for j in range(out_seq.size()[0]):
-            output, hidden, memory = network(in_seq[j], hidden, memory)
-            _, guess = output.max(1)
-            if guess == out_seq[j]:
-                right = right + 1
-            total = total + 1
-
-    return right / total
-        
+    with torch.no_grad():
+        for i in range(0, len(data), seq_length):
+            in_seq = convert_to_one_hot_matrix(data[i:i+ seq_length], sign_to_int)
+            out_seq = target_tensor(data[i+1: i+ seq_length + 1], sign_to_int)
+            in_seq = in_seq.to(device)
+            out_seq = out_seq.to(device)
+            out_seq.unsqueeze_(-1)
+            if i % 100000 == 0:
+                print(i)
+            for j in range(out_seq.size()[0]):
+                output, hidden, memory = network(in_seq[j], hidden, memory)
+                _, guess = output.max(1)
+                if guess == out_seq[j]:
+                    right = right + 1
+                total = total + 1
+        print("finished eval loop")
+        print(total)
+        print(right)
+        res = right/total
+        print("finished calculating accuracy")
+        print(res)
+    return
 
 
 def train(network: LSTM, criterion, input_seq, follow_seq, optimizer: optim.Optimizer, scheduler):
