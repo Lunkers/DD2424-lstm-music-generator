@@ -3,10 +3,11 @@ import torch.nn as nn
 import torch
 import torch.optim as optim
 import json
-from processing import one_hot_encoding, decode_output, loade_data
+from processing import one_hot_encoding, decode_output, loade_data, create_midi
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import random
+import numpy as np
 
 
 def main():
@@ -33,13 +34,13 @@ def main():
     # move network to GPU
     
     print(device)
-    network, _, losses, best_net = trainLoop(network, criterion, notes, optimizer, 1, seq_length, sign_to_int, scheduler)
-    
-    plt.plot(losses)
+    #network, _, losses, best_net = trainLoop(network, criterion, notes, optimizer, 3, seq_length, sign_to_int, scheduler)
+    best_net = network
+    """plt.plot(losses)
     plt.savefig('losses.png')
-    plt.close('all')
+    plt.close('all')"""
     print('saving network....')
-    save_network(best_net, "net.pth")
+    #save_network(best_net, "net.pth")
     print('evaluating on test data...')
     evaluateAccuracy(test, best_net, seq_length, sign_to_int)
     print("eval done!")
@@ -157,22 +158,23 @@ def target_tensor(target_arr: list, sign_to_int: dict):
     return torch.LongTensor(indexes)
 
 
-def synthesize_notes(network: LSTM, start_input, n: int, sign_to_int: dict, int_to_sign: dict):
+def synthesize_notes(network: LSTM, inputs, n: int, sign_to_int: dict, int_to_sign: dict):
     seq = []
     hidden = network.initHidden()
     memory = network.initMemory()
+    inputs = convert_to_one_hot_matrix([inputs] * 2, sign_to_int)
     
     with torch.no_grad():    
         for i in range(n): 
             p, hidden, memory = network(inputs, hidden, memory)
 
-            p = p.numpy()[0]
-            ind = np.random.choice((p.shape[0]), 1, p=p)[0]
+            p = p.numpy()[0][0][:]
 
-            inputs = torch.zero(1, 1, len(sign_to_int))
-            inputs = inputs[0][0][ind] = 1
+            ind = np.random.choice((p.shape[0]), 1, p=p/sum(p))[0]
+            inputs = torch.zeros(1, 1, len(sign_to_int))
+            inputs[0][0][ind] = 1
             
-            seq.append(ind_to_char[str(ind)])
+            seq.append(int_to_sign[str(ind)])
 
     return seq
 
@@ -187,5 +189,16 @@ def save_network(network: LSTM, path: str):
 def load_network(network: LSTM, path: str):
     network.load_state_dict(torch.load(path))
 
+def synthesize_midi():
+    int_to_sign =  loade_data('./int2sign.json')
+    sign_to_int = loade_data('./sign2int.json')
+    network = LSTM(hidden_size = 64, input_size = 90, output_size = 90)
+    load_network(network, "net.pth")
+    notes = synthesize_notes(network, "C3", 100, sign_to_int, int_to_sign)
+    create_midi(notes)
+
+
+
 if __name__ == "__main__":
+    #synthesize_midi()
     main()

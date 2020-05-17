@@ -106,13 +106,15 @@ def create_midi(notes):
                 s.append(chord.Chord(c))
                 c = []
             continue 
+        if (i == len(notes) - 1):
+            break
         if (notes[i+1] == nextString or notes[i+1] == endString):
             s.append(note.Note(n))
         else:
             c.append(note.Note(n))
 
     mf = midi.translate.streamToMidiFile(s)
-    mf.open('test.mid', 'wb')
+    mf.open('res.mid', 'wb')
     mf.write()
     mf.close()
 
